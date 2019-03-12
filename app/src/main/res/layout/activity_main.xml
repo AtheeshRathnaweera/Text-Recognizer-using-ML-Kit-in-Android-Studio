@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/capturedImage"
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        />
+
+    <TableRow
+        android:id="@+id/buttonRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/OpenCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center|center_vertical"
+            android:text="Open camera" />
+
+        <Button
+            android:id="@+id/detect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:gravity="center|center_vertical"
+            android:text="Detect" />
+
+    </TableRow>
+
+    <TextView
+        android:id="@+id/resultDisplay"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:text="Hello World!"
+       android:gravity="center_horizontal"
+        android:textSize="15sp"/>
+
+</LinearLayout>
