@@ -9,12 +9,15 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -28,11 +31,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.internal.service.Common;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
+import com.google.firebase.ml.vision.text.RecognizedLanguage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -107,14 +113,56 @@ public class MainActivity extends AppCompatActivity {
                 } else {
 
                     FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(finalBit);
-                    FirebaseVisionTextRecognizer firebaseVisionTextRecognizer = FirebaseVision.getInstance().getCloudTextRecognizer();
-                    firebaseVisionTextRecognizer.processImage(firebaseVisionImage)
-                            .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
-                                @Override
-                                public void onSuccess(FirebaseVisionText firebaseVisionText) {
-                                    process(firebaseVisionText);
-                                }
-                            });
+
+                    FirebaseVisionTextRecognizer detector = FirebaseVision.getInstance()
+                            .getOnDeviceTextRecognizer();
+
+                    Task<FirebaseVisionText> result =
+                            detector.processImage(firebaseVisionImage)
+                                    .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
+                                        @Override
+                                        public void onSuccess(FirebaseVisionText firebaseVisionText) {
+
+                                            String resultText = firebaseVisionText.getText();
+                                            String textRes = null;
+                                            for (FirebaseVisionText.TextBlock block: firebaseVisionText.getTextBlocks()) {
+                                                String blockText = block.getText();
+                                                Float blockConfidence = block.getConfidence();
+                                                List<RecognizedLanguage> blockLanguages = block.getRecognizedLanguages();
+                                                Point[] blockCornerPoints = block.getCornerPoints();
+                                                Rect blockFrame = block.getBoundingBox();
+
+                                               Log.e("String"," String :"+blockText);
+                                                textRes = textRes + " "+blockText;
+
+                                                for (FirebaseVisionText.Line line: block.getLines()) {
+                                                    String lineText = line.getText();
+                                                    Float lineConfidence = line.getConfidence();
+                                                    List<RecognizedLanguage> lineLanguages = line.getRecognizedLanguages();
+                                                    Point[] lineCornerPoints = line.getCornerPoints();
+                                                    Rect lineFrame = line.getBoundingBox();
+
+                                                    Log.e("String"," Text line :"+lineText);
+                                                    for (FirebaseVisionText.Element element: line.getElements()) {
+                                                        String elementText = element.getText();
+                                                        Float elementConfidence = element.getConfidence();
+                                                        List<RecognizedLanguage> elementLanguages = element.getRecognizedLanguages();
+                                                        Point[] elementCornerPoints = element.getCornerPoints();
+                                                        Rect elementFrame = element.getBoundingBox();
+                                                    }
+                                                }
+                                        }
+
+                                            resultsDisplay.setText(resultText);
+                                        }
+                                    })
+                                    .addOnFailureListener(
+                                            new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                   Toast.makeText(MainActivity.this,"Failed to recognize",Toast.LENGTH_LONG).show();
+                                                }
+                                            });
 
                 }
 
@@ -191,60 +239,10 @@ public class MainActivity extends AppCompatActivity {
                     cursor.close();
 
                     Bitmap capturedImage = BitmapFactory.decodeFile(filePath);
-                    finalBit = getResizedBitmap(capturedImage, 2800, 1000);
+                    finalBit = getResizedBitmap(capturedImage, 2800, 1500);
 
                     img.setImageBitmap(finalBit);
 
-
-                    // Bitmap b = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
-
-                    // img.setImageBitmap(Bitmap.createScaledBitmap(b, 120, 120, false));
-                    // b.recycle();
-
-                  /* int rotate = 0;
-
-                    Uri selectedImage = data.getData();//get image uri
-                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
-
-                    Log.e("Image uri"," this is the uri: "+selectedImage);
-                    assert selectedImage != null;
-                    @SuppressLint("Recycle") Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-                    cursor.moveToFirst();
-
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    //file path of captured image
-                    String filePath = cursor.getString(columnIndex);
-
-
-                    try {
-                        getContentResolver().notifyChange(selectedImage, null);
-                        File imageFile = new File(filePath);
-                        ExifInterface exif = new ExifInterface(
-                                imageFile.getAbsolutePath());
-                        int orientation = exif.getAttributeInt(
-                                ExifInterface.TAG_ORIENTATION,
-                                ExifInterface.ORIENTATION_NORMAL);
-
-                        switch (orientation) {
-                            case ExifInterface.ORIENTATION_ROTATE_270:
-                                rotate = 270;
-                                break;
-                            case ExifInterface.ORIENTATION_ROTATE_180:
-                                rotate = 180;
-                                break;
-                            case ExifInterface.ORIENTATION_ROTATE_90:
-                                rotate = 90;
-                                break;
-                        }
-                        Log.e("Orientation", "Exif orientation: " + orientation);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    /****** Image rotation ****/
-                    /*Matrix matrix = new Matrix();
-                    matrix.postRotate(-90);
-                    Bitmap cropped = Bitmap.createBitmap(scaled, 0, 0, 1000, 1000, matrix, true); */
 
 
                     break;

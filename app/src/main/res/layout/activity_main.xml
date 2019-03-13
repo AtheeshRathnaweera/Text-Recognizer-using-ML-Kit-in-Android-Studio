@@ -10,8 +10,7 @@
     <ImageView
         android:id="@+id/capturedImage"
         android:layout_width="match_parent"
-        android:layout_height="360dp"
-        />
+        android:layout_height="360dp" />
 
     <TableRow
         android:id="@+id/buttonRow"
@@ -36,12 +35,14 @@
 
     </TableRow>
 
-    <TextView
-        android:id="@+id/resultDisplay"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:text="Hello World!"
-       android:gravity="center_horizontal"
-        android:textSize="15sp"/>
+
+        <TextView
+            android:id="@+id/resultDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:gravity="center_horizontal"
+            android:text="Hello World!"
+            android:textSize="15sp" />
+    
 
 </LinearLayout>
